@@ -2,9 +2,11 @@ package ci
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"gopkg.in/yaml.v3"
 )
 
 func NewWorkspaceFromGit(root, url, branch string) (*workspaceImpl, error) {
@@ -13,7 +15,7 @@ func NewWorkspaceFromGit(root, url, branch string) (*workspaceImpl, error) {
 		return nil, err
 	}
 
-	ref, err := cloneRepo(url, dir, branch)
+	ref, err := cloneRepoAndGetRef(url, dir, branch)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +42,7 @@ func createTempDir(root string) (string, error) {
 	return dir, nil
 }
 
-func cloneRepo(url, dir, branch string) (*plumbing.Reference, error) {
+func cloneRepoAndGetRef(url, dir, branch string) (*plumbing.Reference, error) {
 	repo, err := git.PlainClone(dir, false, &git.CloneOptions{
 		URL:               url,
 		ReferenceName:     plumbing.NewBranchReferenceName(branch),
@@ -80,4 +82,19 @@ func (w *workspaceImpl) Dir() string {
 
 func (w *workspaceImpl) Env() []string {
 	return w.env
+}
+
+func (w *workspaceImpl) LoadPipeline() (*Pipeline, error) {
+	data, err := os.ReadFile(filepath.Join(w.dir, "build", "flow-ci.yaml"))
+	if err != nil {
+		return nil, err
+	}
+
+	var pipeline Pipeline
+	err = yaml.Unmarshal(data, &pipeline)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pipeline, nil
 }

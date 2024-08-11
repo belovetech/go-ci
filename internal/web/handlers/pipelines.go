@@ -7,7 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-type WithRepoURL struct {
+type RequestBody struct {
 	Url    string `json:"url" xml:"url" form:"url"`
 	Branch string `json:"branch" xml:"branch" form:"branch"`
 }
@@ -20,7 +20,7 @@ func SetupPipelineRoutes(app *fiber.App) {
 }
 
 func postCheckItWorks(c *fiber.Ctx) error {
-	body := &WithRepoURL{}
+	body := &RequestBody{}
 
 	if err := c.BodyParser(body); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
