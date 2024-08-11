@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"fmt"
-
 	"github.com/belovetech/go-ci/internal/ci"
 	"github.com/gofiber/fiber/v2"
 )
@@ -36,8 +34,18 @@ func postCheckItWorks(c *fiber.Ctx) error {
 		})
 	}
 
+	executor := ci.NewExecutor(ws)
+	output, err := executor.RunDefault(c.Context())
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": c.SendString(output),
+		})
+	}
+
 	return c.JSON(fiber.Map{
-		"message": fmt.Sprintf("Working with repo: %s", body.Url),
+		"message": "Pipeline executed successfully",
+		"output":  output,
+		"repo":    body.Url,
 		"branch":  ws.Branch(),
 		"commit":  ws.Commit(),
 		"dir":     ws.Dir(),
